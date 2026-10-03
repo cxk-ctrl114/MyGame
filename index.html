@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Set Damn Password</title>
+<style>
+  html, body { margin: 0; background: #fff; color: #111; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  main { max-width: 36rem; margin: 0 auto; padding: 4rem 1.5rem; }
+  h1 {
+    margin: 0;
+    color: #111;
+    font-size: 1.85rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+  h1 .hot {
+    display: inline-block;
+    color: #ff4d8d;
+    font-size: 1.45em;
+    font-weight: 800;
+    line-height: 1;
+    animation: title-lift 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  h1 .hot:nth-of-type(2) { animation-delay: 0.08s; }
+  h1 .hot:nth-of-type(3) { animation-delay: 0.16s; }
+  #rules { margin: 2.5rem 0 0.75rem; }
+  #rules p { margin: 0.25rem 0; overflow-wrap: anywhere; animation: rule-in 0.28s ease; }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #222;
+    background: #fff;
+    color: #111;
+    font: inherit;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    padding: 0.85rem 0.9rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  input:focus {
+    border-color: #ff4d8d;
+    box-shadow: 0 0 0 4px rgba(255, 77, 141, 0.18);
+  }
+  #rules p.back { animation: rule-back 0.35s ease both; }
+  #rules .mark { color: #ff4d8d; font-weight: 700; }
+  #ask {
+    margin: 1.25rem 0 0.75rem;
+    font-weight: 700;
+    animation: rule-in 0.4s ease both;
+  }
+  button {
+    display: block;
+    margin: 0 0 0.75rem;
+    border: 1px solid #222;
+    background: #fff;
+    color: #111;
+    font: inherit;
+    font-weight: 700;
+    padding: 0.7rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+  button:hover { border-color: #ff4d8d; color: #ff4d8d; }
+  #login[hidden], #ask[hidden], #confirm[hidden] { display: none; }
+  #login { margin-top: 2.5rem; animation: rule-in 0.4s ease both; }
+  #login p { margin: 0 0 0.75rem; }
+  #login-msg { min-height: 1.5rem; font-weight: 700; color: #ff4d8d; }
+  #end[hidden] { display: none; }
+  #end { margin-top: 2.5rem; animation: rule-in 0.45s ease both; }
+  #end p { margin: 0 0 0.75rem; }
+  .end-title {
+    color: #ff4d8d;
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  #end-pw { font-weight: 700; overflow-wrap: anywhere; }
+  @keyframes rule-back {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes title-lift {
+    from { opacity: 0; transform: translateY(8px) scale(0.9); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes rule-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pw-shake {
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    h1 .hot, #rules p, #ask, #login, input, button { animation: none; transition: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1><span class="hot">S</span>et <span class="hot">D</span>amn <span class="hot">P</span>assword</h1>
+  <div id="rules"></div>
+  <p id="ask" hidden>确认使用这个密码？</p>
+  <button id="confirm" hidden type="button">确认</button>
+  <input id="pw" aria-label="密码" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" type="text" />
+  <section id="login" hidden>
+    <p>登录</p>
+    <input id="login-pw" aria-label="登录密码" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" type="password" />
+    <button id="enter" type="button">登录</button>
+    <p id="login-msg"></p>
+  </section>
+  <section id="end" hidden>
+    <p class="end-title">通关</p>
+    <p id="end-count">13 条规则全部生效。</p>
+    <p id="end-pw"></p>
+  </section>
+</main>
+<script>
+const FRUITS = ["apple", "apricot", "avocado", "banana", "berry", "blackberry", "blueberry", "cantaloupe", "cherry", "clementine", "coconut", "cranberry", "date", "dragonfruit", "durian", "elderberry", "fig", "gooseberry", "grape", "grapefruit", "guava", "honeydew", "jackfruit", "kiwi", "kumquat", "lemon", "lime", "longan", "lychee", "mango", "mangosteen", "melon", "mulberry", "nectarine", "olive", "orange", "papaya", "passionfruit", "peach", "pear", "persimmon", "pineapple", "plantain", "plum", "pomegranate", "pomelo", "prune", "quince", "rambutan", "raspberry", "soursop", "starfruit", "strawberry", "tamarind", "tangerine", "tomato", "watermelon"];
+const COLORS = ["amber", "azure", "beige", "black", "blue", "bronze", "brown", "copper", "coral", "cream", "crimson", "cyan", "gold", "gray", "green", "grey", "indigo", "ivory", "khaki", "lavender", "lime", "magenta", "maroon", "mustard", "navy", "olive", "orange", "pink", "purple", "red", "ruby", "scarlet", "silver", "teal", "turquoise", "violet", "white", "yellow"];
+const ANIMALS = ["alligator", "ant", "badger", "bat", "bear", "beaver", "bee", "beetle", "bird", "bison", "buffalo", "bull", "butterfly", "camel", "carp", "cat", "cheetah", "chicken", "clam", "cobra", "cougar", "cow", "crab", "crane", "crocodile", "crow", "deer", "dog", "dolphin", "donkey", "duck", "eagle", "eel", "elephant", "elk", "emu", "falcon", "ferret", "fish", "flamingo", "fox", "frog", "gecko", "giraffe", "goat", "goose", "gorilla", "hamster", "hawk", "hedgehog", "heron", "herring", "hippo", "horse", "hyena", "iguana", "jackal", "jaguar", "kangaroo", "koala", "leopard", "lion", "lizard", "lobster", "lynx", "mole", "monkey", "moose", "moth", "mouse", "newt", "octopus", "otter", "owl", "oyster", "panda", "parrot", "peacock", "pelican", "penguin", "pig", "pigeon", "platypus", "porcupine", "rabbit", "raccoon", "rat", "rhino", "rooster", "salamander", "salmon", "seal", "shark", "sheep", "shrimp", "snail", "snake", "sparrow", "spider", "squid", "squirrel", "stork", "swan", "tiger", "toad", "trout", "tuna", "turkey", "turtle", "vulture", "walrus", "wasp", "weasel", "whale", "wolf", "wombat", "worm", "zebra"];
+const SPECIALS = "!@#$%^&*()_+-=?/";
+const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const COUNTRIES = ["afghanistan", "albania", "algeria", "america", "andorra", "angola", "argentina", "armenia", "australia", "austria", "azerbaijan", "bahamas", "bahrain", "bangladesh", "barbados", "belarus", "belgium", "belize", "benin", "bhutan", "bolivia", "bosnia", "botswana", "brazil", "britain", "brunei", "bulgaria", "burundi", "cambodia", "cameroon", "canada", "chad", "chile", "china", "colombia", "comoros", "congo", "costa", "croatia", "cuba", "cyprus", "czechia", "denmark", "djibouti", "dominica", "ecuador", "egypt", "england", "eritrea", "estonia", "eswatini", "ethiopia", "fiji", "finland", "france", "gabon", "gambia", "georgia", "germany", "ghana", "greece", "grenada", "guatemala", "guinea", "guyana", "haiti", "honduras", "hungary", "iceland", "india", "indonesia", "iran", "iraq", "ireland", "israel", "italy", "jamaica", "japan", "jordan", "kazakhstan", "kenya", "kiribati", "korea", "kosovo", "kuwait", "kyrgyzstan", "lanka", "laos", "latvia", "lebanon", "lesotho", "liberia", "libya", "liechtenstein", "lithuania", "luxembourg", "madagascar", "malawi", "malaysia", "maldives", "mali", "malta", "mauritania", "mauritius", "mexico", "micronesia", "moldova", "monaco", "mongolia", "montenegro", "morocco", "mozambique", "myanmar", "namibia", "nauru", "nepal", "netherlands", "nicaragua", "niger", "nigeria", "norway", "oman", "pakistan", "palau", "panama", "paraguay", "peru", "philippines", "poland", "portugal", "qatar", "romania", "russia", "rwanda", "samoa", "scotland", "senegal", "serbia", "seychelles", "singapore", "slovakia", "slovenia", "somalia", "spain", "sudan", "suriname", "sweden", "switzerland", "syria", "taiwan", "tajikistan", "tanzania", "thailand", "togo", "tonga", "tunisia", "turkey", "turkmenistan", "tuvalu", "uganda", "ukraine", "uruguay", "uzbekistan", "vanuatu", "vatican", "venezuela", "vietnam", "wales", "yemen", "zambia", "zealand", "zimbabwe"];
+const VEHICLES = ["aircraft", "airplane", "ambulance", "balloon", "bicycle", "bike", "boat", "bus", "canoe", "car", "carriage", "chariot", "ferry", "glider", "helicopter", "jeep", "kayak", "motorcycle", "plane", "rocket", "scooter", "sedan", "ship", "sled", "subway", "taxi", "tractor", "train", "tram", "truck", "vessel", "wagon", "yacht"];
+const WEATHER = ["blizzard", "breeze", "cloud", "cloudy", "cyclone", "drizzle", "drought", "flood", "fog", "foggy", "frost", "gale", "hail", "haze", "humid", "hurricane", "lightning", "mist", "monsoon", "overcast", "rain", "rainbow", "rainy", "shower", "sleet", "snow", "snowy", "storm", "stormy", "sunny", "sunshine", "thunder", "tornado", "typhoon", "wind", "windy"];
+const JOBS = ["accountant", "acrobat", "actor", "admiral", "ambassador", "analyst", "apprentice", "architect", "artist", "astronaut", "astronomer", "athlete", "auditor", "author", "baker", "banker", "barber", "bartender", "biologist", "blacksmith", "brewer", "broker", "butcher", "butler", "cadet", "captain", "carpenter", "cashier", "chef", "chemist", "clerk", "clown", "coach", "colonel", "cook", "custodian", "dancer", "dentist", "designer", "detective", "diplomat", "director", "doctor", "driver", "drummer", "economist", "editor", "engineer", "farmer", "firefighter", "general", "geologist", "guard", "guide", "historian", "intern", "interpreter", "janitor", "jockey", "journalist", "judge", "juggler", "lawyer", "lecturer", "librarian", "magician", "mason", "mechanic", "merchant", "midwife", "miner", "musician", "nanny", "ninja", "nurse", "officer", "pharmacist", "philosopher", "photographer", "physician", "physicist", "pianist", "pilot", "pirate", "plumber", "poet", "porter", "president", "producer", "professor", "programmer", "ranger", "reporter", "sailor", "scholar", "scientist", "secretary", "senator", "sergeant", "sheriff", "singer", "soldier", "student", "surgeon", "tailor", "teacher", "therapist", "translator", "umpire", "veterinarian", "waiter", "weaver", "welder", "writer", "zoologist"];
+const FOODS = ["bacon", "bagel", "beans", "beef", "biscuit", "bread", "broccoli", "brownie", "burger", "burrito", "butter", "cabbage", "cake", "candy", "carrot", "cereal", "cheese", "chicken", "chili", "chocolate", "cookie", "corn", "croissant", "cucumber", "curry", "custard", "donut", "dumpling", "egg", "garlic", "granola", "ham", "honey", "jam", "kebab", "lamb", "lentils", "lettuce", "meat", "muffin", "mushroom", "noodles", "oatmeal", "omelette", "onion", "pancake", "pasta", "pastry", "pepper", "pie", "pizza", "popcorn", "pork", "porridge", "potato", "pretzel", "pudding", "ramen", "rice", "salad", "sandwich", "sausage", "soup", "spinach", "steak", "stew", "sugar", "sushi", "syrup", "taco", "tart", "toast", "tofu", "tomato", "turkey", "waffle", "yogurt"];
+const SPORTS = ["archery", "badminton", "baseball", "basketball", "billiards", "bowling", "boxing", "cricket", "cycling", "diving", "fencing", "football", "golf", "hockey", "jogging", "judo", "karate", "marathon", "polo", "race", "rowing", "rugby", "running", "skating", "ski", "skiing", "soccer", "sprint", "surfing", "swim", "taekwondo", "tennis", "volleyball", "wrestling", "yoga"];
+const DRINKS = ["absinthe", "ale", "americano", "beer", "boba", "bourbon", "brandy", "cappuccino", "champagne", "cider", "cocoa", "coffee", "cognac", "cola", "espresso", "gin", "horchata", "juice", "kombucha", "lassi", "latte", "lemonade", "matcha", "mead", "milk", "milkshake", "mocha", "nectar", "port", "rum", "sake", "scotch", "sherry", "smoothie", "soda", "squash", "tea", "tequila", "tonic", "vodka", "water", "whiskey", "whisky", "wine"];
+const METALS = ["aluminum", "aluminium", "antimony", "arsenic", "bismuth", "brass", "bronze", "cadmium", "calcium", "chromium", "cobalt", "copper", "gallium", "gold", "indium", "iridium", "iron", "lead", "lithium", "magnesium", "manganese", "mercury", "molybdenum", "nickel", "osmium", "palladium", "platinum", "potassium", "rhodium", "silver", "sodium", "steel", "tin", "titanium", "tungsten", "uranium", "vanadium", "zinc"];
+const DIRECTIONS = ["ahead", "backward", "behind", "downward", "east", "forward", "left", "north", "northeast", "northwest", "right", "south", "southeast", "southwest", "upward", "west"];
+const ROMANS = ["ii", "iv", "ix", "lv", "lx", "vi", "xc", "xi", "xl", "xv", "xx"];
+
+function hasWord(pw, list) {
+  const s = pw.toLowerCase();
+  return list.some((w) => s.includes(w));
+}
+function hasSpecial(pw) {
+  return [...pw].some((c) => SPECIALS.includes(c));
+}
+function palindromeHits(pw) {
+  const hits = [];
+  for (let i = 0; i < pw.length; i++) {
+    for (let j = i + 4; j <= pw.length; j++) {
+      const sub = pw.slice(i, j);
+      let same = true;
+      for (let a = 0, b = sub.length - 1; a < b; a++, b--) {
+        if (sub[a] !== sub[b]) { same = false; break; }
+      }
+      if (same) {
+        hits.push(sub);
+        if (hits.length >= 3) return hits;
+      }
+    }
+  }
+  return hits;
+}
+function vowels(pw) {
+  return (pw.match(/[aeiou]/gi) || []).length;
+}
+function digitCount(pw) {
+  return (pw.match(/\d/g) || []).length;
+}
+function middleIsVowel(pw) {
+  return /[aeiou]/i.test(pw[(pw.length - 1) >> 1] || "");
+}
+
+const RULES = [
+  { test: (pw) => pw.length >= 8, text: () => "密码长度不少于8位" },
+  { test: (pw) => /[a-z]/.test(pw) && /[A-Z]/.test(pw), text: () => "密码需包含大小写字母" },
+  { test: (pw) => /\d/.test(pw), text: () => "密码需包含数字" },
+  { test: hasSpecial, text: () => "密码需包含特殊字符" },
+  { test: (pw) => hasWord(pw, FRUITS), text: () => "密码需包含一种水果的英文单词" },
+  { test: (pw) => pw.includes("125"), text: () => "密码需包含一段1010101的八进制表示" },
+  { test: (pw) => palindromeHits(pw).length === 0, text: () => "密码不得含有长度大于等于4的回文子串" },
+  { test: (pw) => hasWord(pw, WEEKDAYS), text: () => "密码需包含任意一天的英文单词" },
+  { test: (pw) => hasWord(pw, COLORS), text: () => "密码需包含一种颜色的英文单词" },
+  { test: (pw) => /^[A-Z]/.test(pw) && hasSpecial(pw.slice(-1)), text: () => "密码需以大写字母开头，并以特殊字符结尾" },
+  { test: (pw) => vowels(pw) % 2 === 0, text: () => "元音字母 aeiou 的个数必须是偶数" },
+  { test: (pw) => hasWord(pw, ANIMALS), text: () => "密码需包含一种动物的英文单词" },
+  { test: (pw) => pw.length % 2 === 1, text: () => "密码总长度必须是奇数" },
+  { test: (pw) => hasWord(pw, MONTHS), text: () => "密码需包含一个月份的英文单词" },
+  { test: (pw) => /(.)\1/.test(pw), text: () => "密码需包含连续两个相同的字母" },
+  { test: (pw) => (pw.match(/[A-Z]/g) || []).length === 1, text: () => "密码中只能有一个大写字母" },
+  { test: (pw) => hasWord(pw, COUNTRIES), text: () => "密码需包含一个国家的英文单词" },
+  { test: (pw) => digitCount(pw) % 2 === 0, text: () => "密码中的数字个数必须是偶数" },
+  { test: (pw) => pw.includes("?"), text: () => "密码需包含问号" },
+  { test: (pw) => hasWord(pw, VEHICLES), text: () => "密码需包含一种交通工具的英文单词" },
+  { test: (pw) => hasWord(pw, WEATHER), text: () => "密码需包含一种天气的英文单词" },
+  { test: (pw) => hasWord(pw, JOBS), text: () => "密码需包含一种职业的英文单词" },
+  { test: (pw) => hasWord(pw, FOODS), text: () => "密码需包含一种食物的英文单词" },
+  { test: (pw) => hasWord(pw, SPORTS), text: () => "密码需包含一种运动的英文单词" },
+  { test: (pw) => hasWord(pw, DRINKS), text: () => "密码需包含一种饮料的英文单词" },
+  { test: (pw) => hasWord(pw, METALS), text: () => "密码需包含一种金属的英文单词" },
+  { test: (pw) => hasWord(pw, DIRECTIONS), text: () => "密码需包含一个方向的英文单词" },
+  { test: (pw) => pw.includes("."), text: () => "密码需包含小数点" },
+  { test: (pw) => hasWord(pw, ROMANS), text: () => "密码需包含一个两字母的罗马数字" },
+  { test: (pw) => pw.length > 30, text: () => "密码长度必须大于30" },
+  { test: (pw) => pw.includes(String(pw.length)), text: () => "密码需包含当前总长度的十进制数字" },
+  { test: middleIsVowel, text: () => "密码正中间的那个字符必须是元音" },
+];
+
+let unlocked = 1;
+let phase = "edit";
+let saved = "";
+let wasPassing = [];
+const rulesEl = document.getElementById("rules");
+const pwEl = document.getElementById("pw");
+const askEl = document.getElementById("ask");
+const confirmBtn = document.getElementById("confirm");
+const loginEl = document.getElementById("login");
+const loginPwEl = document.getElementById("login-pw");
+const loginMsgEl = document.getElementById("login-msg");
+
+function advance(pw) {
+  let n = unlocked;
+  while (n < RULES.length && RULES.slice(0, n).every((rule) => rule.test(pw))) n += 1;
+  unlocked = n;
+}
+
+function line(i, revived) {
+  const p = document.createElement("p");
+  if (revived) p.className = "back";
+  const mark = document.createElement("span");
+  mark.className = "mark";
+  mark.textContent = "×";
+  p.append(mark, document.createTextNode(" 规则" + (i + 1) + "：" + RULES[i].text()));
+  return p;
+}
+
+function render() {
+  if (phase !== "edit") return;
+  const pw = pwEl.value;
+  advance(pw);
+  const allPass = unlocked === RULES.length && RULES.every((rule) => rule.test(pw));
+  const passing = RULES.map((rule) => rule.test(pw));
+  let revived = false;
+  rulesEl.replaceChildren();
+  for (let i = 0; i < unlocked; i++) {
+    if (passing[i]) continue;
+    const cameBack = wasPassing[i] === true && !passing[i];
+    if (cameBack) revived = true;
+    rulesEl.appendChild(line(i, cameBack));
+  }
+  askEl.hidden = !allPass;
+  confirmBtn.hidden = !allPass;
+  if (revived) {
+    pwEl.classList.remove("bump");
+    void pwEl.offsetWidth;
+    pwEl.classList.add("bump");
+  }
+  wasPassing = passing;
+}
+
+confirmBtn.addEventListener("click", () => {
+  if (phase !== "edit") return;
+  const pw = pwEl.value;
+  if (!(unlocked === RULES.length && RULES.every((rule) => rule.test(pw)))) return;
+  saved = pw;
+  phase = "login";
+  rulesEl.replaceChildren();
+  askEl.hidden = true;
+  confirmBtn.hidden = true;
+  pwEl.hidden = true;
+  loginEl.hidden = false;
+  loginPwEl.value = "";
+  loginMsgEl.textContent = "";
+  loginPwEl.focus();
+});
+
+function tryLogin() {
+  if (phase !== "login") return;
+  if (loginPwEl.value === saved) {
+    phase = "won";
+    loginEl.hidden = true;
+    const endEl = document.getElementById("end");
+    endEl.hidden = false;
+    document.getElementById("end-count").textContent = RULES.length + " 条规则全部生效。";
+    document.getElementById("end-pw").textContent = saved;
+    return;
+  }
+  loginMsgEl.textContent = "密码错误";
+  loginPwEl.value = "";
+  loginPwEl.classList.remove("bump");
+  void loginPwEl.offsetWidth;
+  loginPwEl.classList.add("bump");
+  loginPwEl.focus();
+}
+
+document.getElementById("enter").addEventListener("click", tryLogin);
+loginPwEl.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") tryLogin();
+});
+pwEl.addEventListener("input", render);
+render();
+pwEl.focus();
+</script>
+</body>
+</html>
